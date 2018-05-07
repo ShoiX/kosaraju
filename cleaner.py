@@ -14,6 +14,7 @@ ctr = 0
 buff = list()
 cur = (handle1.readline().split())[0]
 n = 0
+handle1.seek()
 handle1.seek(0,0)
 for line in handle1:
 	words = line.split()
