@@ -9,13 +9,14 @@
 #include <vector>
 #include <sstream>
 #include <chrono>
+#include <fstream>
 using namespace std;
 
 class vertex
 {
 public:
 	int size;	// number of vertices adjacent to "this" vertex
-	int label	// name of the vertex
+	int label;	// name of the vertex
 	int* head = NULL;	// array pointer to list of adjacents
 	void dump()
 	{
@@ -26,7 +27,7 @@ public:
 		}
 		cout<<endl;
 	}
-}
+};
 
 int main()
 {
