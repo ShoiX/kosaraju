@@ -2,89 +2,145 @@
 *	KOSARAJU'S TWO PASS ALGORITHM
 *	identifies the SCCs of a graph
 * by:	Jerryco Alaba
-*		May 6, 2018
+*
 */
 
 #include <iostream>
+#include <string.h>
 #include <vector>
 #include <sstream>
 #include <chrono>
 #include <fstream>
+#include <stdlib.h>	
+#define INITLIMIT 900000
 using namespace std;
-
+	
 class vertex
 {
 public:
-	int size;	// number of vertices adjacent to "this" vertex
-	int label;	// name of the vertex
-	int* head = NULL;	// array pointer to list of adjacents
-	void dump()
+	int label = 0;	// name of the vertex
+	// vector for vertices adjacent (in and out)
+	vector<int> outward;
+	vector<int> inward;
+	int order;
+	bool first_pass = false;
+	bool second_pass = false;
+
+	vertex()
 	{
-		cout<<"node "<<label<<" of size "<<size<<endl;
-		for (int i = 0; i < size; i++)
-		{
-			cout<<head[i]<<",";
-		}
-		cout<<endl;
+		this->outward.reserve(10);
+		this->inward.reserve(10);
 	}
 };
 
-int main()
-{
-	// get the number of vertices
-	int n;
-	cin>>n;
+int finish_time = 0;
+vertex** order;
 
-	// open file
+void DFS1(int cur, vector<vertex> &vertices)
+{
+	vertices[cur-1].first_pass = true;
+	for (int i = 0, j = vertices[cur-1].inward.size(); i < j; i++)
+	{
+		int cur_vec = vertices[cur - 1].inward[i];
+		if (!vertices[cur_vec - 1].first_pass)
+		{
+			DFS1(cur_vec, vertices);
+		}
+	}
+	// set the finishing time
+	vertices[cur - 1].order = finish_time;
+	order[finish_time] = &vertices[cur - 1];
+	finish_time += 1;
+	return;
+}
+
+/* DUMP subroutine*/
+void gen_dump(vector<vertex> &vertices, int n)
+{
+	cout<<"Graph size: "<<vertices.size()<<endl;
+	for(int i = 0; i < n; i++)
+	{
+		cout<<"vertex "<<vertices[i].label<<" order: "<<vertices[i].order<<endl<<"outward: ";
+		for (int k = 0, l = vertices[i].outward.size(); k < l; k++)
+			cout<<vertices[i].outward[k]<<" ";
+		cout<<endl<<"inward: ";
+
+		for (int m = 0, n = vertices[i].inward.size(); m < n; m++)
+			cout<<vertices[i].inward[m]<<" ";
+		cout<<endl;
+	}
+}
+
+void order_dump(vector<vertex> &vertices, int n)
+{
+	for (int i = 0; i < n; i++)
+	{
+		cout<<"pos "<<i<<": "<<order[i]->label<<endl;
+	}
+}
+
+int main(int argc, char* argv[])
+{
+	if (argc < 2)
+	{
+		cout<<"usage: ./kosaraju file.txt [1/2]\n";
+		return 1;	
+	}
+	std::vector<vertex> vertices;
+	vertices.reserve(INITLIMIT);
+
 	fstream f;
-	f.open("cleaninput1.txt");
+	f.open(argv[1]);
 	if (!f.is_open())
 	{
 		cout<<"Unable to open file\n";
 		return 1;
 	}
 
-	vertex vertices[n];
-
-	// load subroutine
-	stringstrean line;
+	/* LOAD SUBROUTINE */
+	string line;
+	int a, b;
+	int n = 0;	// number of vertices created
 	while (getline(f, line))
 	{
-		// get the number of adjacent vertices of current vertex
-		int adjs;
-		line>>adjs;
-		int cur = 0;	// current context vertex
-		bool first = true;
-		for (int i = 0; i < adjs; i++)
+		stringstream s(line);
+		s>>a>>b;
+		
+		int high = max(a, b);
+		if (high > n)
 		{
-			int a, b;
-			getline(f, ss);
-			ss>>a>>b;
-			if(first)
-			{
-				// get current context vertex
-				cur = a;
-				vertices[cur - 1].size = adjs;
-				vertices[cur - 1].label = cur;
-				vertices[cur - 1 ].head = new int[adjs];
-				first = false;
-			}
-			vertices[cur - 1].head[i] = b;
+			vertices.resize(high);
+			n = high;
+		}
+
+		vertices[a-1].label = (vertices[a - 1].label == 0) ? a : vertices[a-1].label;
+		vertices[b-1].label = (vertices[b - 1].label == 0) ? b : vertices[b-1].label; 
+
+		vertices[a-1].outward.push_back(b);
+		vertices[b-1].inward.push_back(a);
+	}
+
+	n = vertices.size();
+	// first DFS pass
+	order = new vertex*[n];
+	for(int i = n; i > 0; i--)
+	{
+		if (!vertices[i - 1].first_pass)
+		{
+			DFS1(i, vertices);
+		}
+	}
+	if (argc == 3)
+	{
+		if (atoi(argv[2]) == 1)
+		{
+			gen_dump(vertices, n);
+		}
+		else if(atoi(argv[2]) == 2)
+		{
+			order_dump(vertices, n);
 		}
 	}
 
-	// unload subroutine
-	for (int i = 0; i < n; i++)
-	{
-		vertices[i].dump();
-	}
-
-	// unload subroutine
-	for (int i = 0; i < n; i++)
-	{
-		delete[] vertices[i].head;
-	}
-
-	return 0;
-
+	f.close();
 }
