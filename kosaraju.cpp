@@ -179,9 +179,10 @@ int main(int argc, char* argv[])
 
 	// second DFS pass
 	std::vector<scc> SCCs;
-	SCCs.reserve(200000);
+	SCCs.reserve(500000);
 	scc* toplist[top];
-	int ctr = 0;
+	int index_least;	// index of least size on current top SCCs
+	bool getleast = false;	// flag to get the min size in the array of least scc
 	for (int i = n - 1; i >= 0; i--)
 	{
 		if (!order[i]->second_pass)
@@ -193,22 +194,33 @@ int main(int argc, char* argv[])
 			int SCCs_size = SCCs.size();
 
 			// build the list of the largest SCCs of the graph
-			if(ctr < top)
+			if(SCCs_size <= top)
 			{
-				toplist[ctr] = &SCCs[SCCs_size - 1];
-				ctr++;
+				cout<<"less than equal top\n";
+				toplist[SCCs_size - 1] = &SCCs[SCCs_size - 1];
+				getleast = (SCCs_size == top)	?	true	:	false;
 			}
 			else
 			{
-				for (int j = 0; j < top; j++)
+				cout<<"adding new "<< index_least<< SCCs_size<<"\n";
+				// check if current SCC is larger than the least size on our biggest SCC list
+				if (SCCs[SCCs_size - 1].components.size() > toplist[index_least]->components.size() )
 				{
-					if (tmp.components.size() > toplist[i]->components.size())
-					{
-						toplist[i] = &SCCs[SCCs_size - 1];
-						break;
-					}
+					toplist[index_least] =  &(SCCs[SCCs_size - 1]);
+					getleast = true;
 				}
 			}
+			if (getleast)
+			{
+				cout<<"getleast\n";
+				index_least = 0;
+				for (int k = 1; k < top; k++)
+				{
+					index_least = (toplist[k]->components.size() < toplist[index_least]->components.size())	?	k	:	index_least;
+				}
+				getleast = false;
+			}
+
 		}
 	}
 
@@ -230,6 +242,10 @@ int main(int argc, char* argv[])
 		{
 			gen_dump(vertices, n);
 			order_dump(vertices, n);
+		}
+		else if (atoi(argv[2]) == 5)
+		{
+			top_dump(SCCs);
 		}
 	}
 	delete[] order;
