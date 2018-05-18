@@ -125,6 +125,17 @@ void scc_dump(vector<scc> &SCCs)
 	}
 }
 
+void top_dump(scc* toplist[])
+{
+	for (int i = 0; i < top; i++)
+	{
+		cout<<toplist[i]->components.size();
+		if (i < top - 1)
+			cout<<", ";
+	}
+	cout<<endl;
+}
+
 int main(int argc, char* argv[])
 {
 	if (argc < 2)
@@ -196,13 +207,11 @@ int main(int argc, char* argv[])
 			// build the list of the largest SCCs of the graph
 			if(SCCs_size <= top)
 			{
-				cout<<"less than equal top\n";
 				toplist[SCCs_size - 1] = &SCCs[SCCs_size - 1];
 				getleast = (SCCs_size == top)	?	true	:	false;
 			}
 			else
 			{
-				cout<<"adding new "<< index_least<< SCCs_size<<"\n";
 				// check if current SCC is larger than the least size on our biggest SCC list
 				if (SCCs[SCCs_size - 1].components.size() > toplist[index_least]->components.size() )
 				{
@@ -212,7 +221,6 @@ int main(int argc, char* argv[])
 			}
 			if (getleast)
 			{
-				cout<<"getleast\n";
 				index_least = 0;
 				for (int k = 1; k < top; k++)
 				{
@@ -222,6 +230,21 @@ int main(int argc, char* argv[])
 			}
 
 		}
+	}
+
+	// sort the obtained top n SCC
+	for (int i = 0; i < top - 1; i++)
+	{
+		int biggest = i;
+		for (int j = i + 1; j < top; j++)
+		{
+			if (toplist[j]->components.size() > toplist[biggest]->components.size())
+				biggest = j;
+		}
+		// swap current i to biggest
+		scc* tmp = toplist[i];
+		toplist[i] = toplist[biggest];
+		toplist[biggest] = tmp;
 	}
 
 	if (argc == 3)
@@ -245,7 +268,7 @@ int main(int argc, char* argv[])
 		}
 		else if (atoi(argv[2]) == 5)
 		{
-			top_dump(SCCs);
+			top_dump(toplist);
 		}
 	}
 	delete[] order;
